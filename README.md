@@ -79,25 +79,6 @@ cp .env.example .env
 
 Edit `backend/.env`:
 
-```env
-PORT=5000
-NODE_ENV=development
-
-# MongoDB Atlas connection string
-MONGO_URI=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/careerforge
-
-# JWT (use a strong random string)
-JWT_SECRET=your_super_secret_jwt_key_min_32_chars
-JWT_EXPIRE=7d
-
-# Google Gemini AI — get from https://aistudio.google.com/app/apikey
-GEMINI_API_KEY=AIza...
-
-# Stripe — get from https://dashboard.stripe.com/test/apikeys
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRO_PRICE_ID=price_...
 
 # Frontend URL
 FRONTEND_URL=http://localhost:3000
