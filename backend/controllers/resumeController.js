@@ -1,6 +1,30 @@
 const Resume = require('../models/Resume');
 const User = require('../models/User');
 
+const FREE_TEMPLATES = ['modern'];
+const PRO_TEMPLATES = ['classic', 'minimal', 'executive', 'creative'];
+const ALL_TEMPLATES = [...FREE_TEMPLATES, ...PRO_TEMPLATES];
+
+/**
+ * Returns an error response if the given template requires Pro and the user is not Pro.
+ * Returns null if the template is allowed.
+ */
+const checkTemplateAccess = (template, user, res) => {
+  if (template && PRO_TEMPLATES.includes(template) && user.plan !== 'pro') {
+    res.status(403).json({
+      success: false,
+      message: `The "${template}" template is a Pro feature. Please upgrade to use it.`,
+      requiresUpgrade: true,
+    });
+    return true; // blocked
+  }
+  if (template && !ALL_TEMPLATES.includes(template)) {
+    res.status(400).json({ success: false, message: 'Invalid template.' });
+    return true; // blocked
+  }
+  return false; // allowed
+};
+
 // @desc    Create a new resume
 // @route   POST /api/resume
 // @access  Private
@@ -16,10 +40,13 @@ const createResume = async (req, res) => {
       });
     }
 
+    const requestedTemplate = req.body.template || 'modern';
+    if (checkTemplateAccess(requestedTemplate, user, res)) return;
+
     const resume = await Resume.create({
       user: req.user._id,
       title: req.body.title || 'My Resume',
-      template: req.body.template || 'modern',
+      template: requestedTemplate,
     });
 
     await User.findByIdAndUpdate(req.user._id, { $inc: { resumeCount: 1 } });
@@ -68,6 +95,12 @@ const getResume = async (req, res) => {
 // @access  Private
 const updateResume = async (req, res) => {
   try {
+    // If the request attempts to change the template, enforce plan access server-side.
+    if (req.body.template !== undefined) {
+      const user = await User.findById(req.user._id);
+      if (checkTemplateAccess(req.body.template, user, res)) return;
+    }
+
     const resume = await Resume.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id },
       { $set: req.body },
