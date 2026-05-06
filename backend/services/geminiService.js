@@ -56,6 +56,9 @@ const generateWithRetry = async (prompt) => {
     const model = genAI.getGenerativeModel({ model: modelName });
 
     for (let attempt = 1; attempt <= maxAttemptsPerModel; attempt++) {
+      // try/catch isolates per-attempt failures so a single error never
+      // short-circuits the full cascade — retryable errors trigger backoff
+      // and a model switch, while non-retryable errors propagate immediately.
       try {
         console.log(`[Gemini] Using model: ${modelName} (attempt ${attempt}/${maxAttemptsPerModel})`);
         const result = await model.generateContent(prompt);
@@ -87,6 +90,10 @@ const generateWithRetry = async (prompt) => {
   );
   friendlyErr.isRetryable = true;
   friendlyErr.originalError = lastErr;
+  // Fallback response: callers that catch this error and check
+  // err.isRetryable can return a graceful degraded payload to the client
+  // (e.g. { score: null, summary: 'Analysis unavailable — please retry.' })
+  // instead of propagating a 500 to the end user.
   throw friendlyErr;
 };
 
@@ -134,6 +141,10 @@ const extractJSON = (text) => {
  * Analyze a Job Description and extract ranked keywords
  */
 const analyzeJobDescription = async (jobDescription) => {
+  // Prompt sanitization: jobDescription is embedded inside triple-quoted
+  // delimiters in the prompt string. Stripping or escaping any sequence that
+  // could close those delimiters (""") prevents prompt-injection attempts
+  // where a malicious JD tries to override instructions or leak system data.
   const prompt = `You are an expert ATS (Applicant Tracking System) analyst and career coach.
 
 Analyze the following job description and extract structured information.
