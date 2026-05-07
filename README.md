@@ -8,17 +8,16 @@
 
 ## ✨ Features
 
-| Feature | Free | Pro |
-|---|---|---|
-| Resume builder (split-screen) | ✅ | ✅ |
-| AI bullet point rewriter | ✅ (1 resume) | ✅ Unlimited |
-| JD analysis & ATS scoring | ✅ | ✅ |
-| Skills suggestions | ✅ | ✅ |
-| PDF export (Modern template) | ✅ | ✅ |
-| All 5 premium templates | ❌ | ✅ |
-| Cover letter generator | ❌ | ✅ |
-| Cover letter PDF export | ❌ | ✅ |
-| Unlimited resumes | ❌ | ✅ |
+| Feature                | Free    | Pro       |
+| ---------------------- | ------- | --------- |
+| Resume Builder         | ✅       | ✅         |
+| AI Resume Rewriter     | Limited | Unlimited |
+| ATS Score Analysis     | ✅       | ✅         |
+| Skills Suggestions     | ✅       | ✅         |
+| PDF Export             | ✅       | ✅         |
+| Premium Templates      | ❌       | ✅         |
+| Cover Letter Generator | ❌       | ✅         |
+| Unlimited Resumes      | ❌       | ✅         |
 
 ---
 
