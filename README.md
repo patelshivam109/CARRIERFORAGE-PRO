@@ -76,12 +76,33 @@ cd backend
 cp .env.example .env
 ```
 
-Edit `backend/.env`:
+Edit `backend/.env` and fill in all required values:
 
+```env
+# Server
+NODE_ENV=development
+PORT=5000
 
-# Frontend URL
+# Database
+MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/careerforge
+
+# Auth
+JWT_SECRET=<64-char random string>
+JWT_EXPIRE=7d
+
+# Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:3000
+
+# Google Gemini AI
+GEMINI_API_KEY=<your Google AI Studio key>
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_PRO_PRICE_ID=price_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
+
+> **Tip:** Generate a strong `JWT_SECRET` with `openssl rand -hex 64`
 
 ---
 
@@ -97,7 +118,7 @@ FRONTEND_URL=http://localhost:3000
 stripe listen --forward-to localhost:5000/api/payment/webhook
 ```
 
-This gives you the `whsec_...` webhook secret.
+This gives you the `whsec_...` webhook secret → paste as `STRIPE_WEBHOOK_SECRET`.
 
 ---
 
@@ -200,42 +221,50 @@ careerforge-pro/
 
 ## 🔌 API Reference
 
+> **Base URL:** `http://localhost:5000/api`
+> 🔒 = Requires `Authorization: Bearer <token>` header
+> ⭐ = Requires Pro plan
+
 ### Auth
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/register` | Create account |
-| POST | `/api/auth/login` | Login |
-| GET | `/api/auth/me` | Get current user |
-| PUT | `/api/auth/profile` | Update profile |
+
+| Method | Endpoint | Auth | Body | Description |
+|---|---|---|---|---|
+| POST | `/auth/register` | — | `{ name, email, password }` | Create account |
+| POST | `/auth/login` | — | `{ email, password }` | Login, returns JWT |
+| GET | `/auth/me` | 🔒 | — | Get current user |
+| PUT | `/auth/profile` | 🔒 | `{ name, email, password? }` | Update profile |
 
 ### Resume
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/resume` | Get all resumes |
-| POST | `/api/resume` | Create resume |
-| GET | `/api/resume/:id` | Get single resume |
-| PUT | `/api/resume/:id` | Update resume |
-| DELETE | `/api/resume/:id` | Delete resume |
-| POST | `/api/resume/:id/duplicate` | Duplicate resume |
 
-### AI (all require Auth)
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/ai/analyze-jd` | Analyse JD + score resume |
-| POST | `/api/ai/rewrite-experience/:id` | AI rewrite bullets |
-| POST | `/api/ai/rewrite-summary/:id` | AI rewrite summary |
-| POST | `/api/ai/suggest-skills/:id` | Suggest missing skills |
-| GET | `/api/ai/export/:id` | Export resume as PDF |
-| POST | `/api/ai/cover-letter/:id` | Generate cover letter (Pro) |
-| GET | `/api/ai/export-cover-letter/:id` | Export cover letter PDF (Pro) |
+| Method | Endpoint | Auth | Body | Description |
+|---|---|---|---|---|
+| GET | `/resume` | 🔒 | — | Get all resumes |
+| POST | `/resume` | 🔒 | `{ title?, template? }` | Create resume (Free: max 1) |
+| GET | `/resume/:id` | 🔒 | — | Get single resume |
+| PUT | `/resume/:id` | 🔒 | `{ ...resumeFields }` | Update resume |
+| DELETE | `/resume/:id` | 🔒 | — | Delete resume |
+| POST | `/resume/:id/duplicate` | 🔒 ⭐ | — | Duplicate resume |
+
+### AI
+
+| Method | Endpoint | Auth | Body | Description |
+|---|---|---|---|---|
+| POST | `/ai/analyze-jd` | 🔒 | `{ resumeId, jobDescription }` | Analyse JD + score resume |
+| POST | `/ai/rewrite-experience/:id` | 🔒 | `{ experienceIndex }` | AI rewrite bullet points |
+| POST | `/ai/rewrite-summary/:id` | 🔒 | — | AI rewrite summary |
+| POST | `/ai/suggest-skills/:id` | 🔒 | — | Suggest missing skills |
+| GET | `/ai/export/:id` | 🔒 | — | Export resume as PDF |
+| POST | `/ai/cover-letter/:id` | 🔒 ⭐ | `{ jobDescription }` | Generate cover letter |
+| GET | `/ai/export-cover-letter/:id` | 🔒 ⭐ | — | Export cover letter PDF |
 
 ### Payment
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/payment/create-checkout` | Create Stripe checkout |
-| POST | `/api/payment/portal` | Customer portal |
-| POST | `/api/payment/webhook` | Stripe webhook handler |
-| GET | `/api/payment/status` | Get subscription status |
+
+| Method | Endpoint | Auth | Body | Description |
+|---|---|---|---|---|
+| POST | `/payment/create-checkout` | 🔒 | — | Create Stripe checkout session |
+| POST | `/payment/portal` | 🔒 | — | Open Stripe customer portal |
+| POST | `/payment/webhook` | — | *(Stripe raw body)* | Stripe webhook handler |
+| GET | `/payment/status` | 🔒 | — | Get current subscription status |
 
 ---
 
@@ -262,7 +291,7 @@ careerforge-pro/
 
 ---
 
-### 🚢 Deployment
+## 🚢 Deployment
 
 ### Environment variables for production:
 ```env
@@ -270,6 +299,10 @@ NODE_ENV=production
 FRONTEND_URL=https://yourdomain.com
 MONGO_URI=mongodb+srv://...  # production cluster
 JWT_SECRET=<64-char random string>
+GEMINI_API_KEY=<your key>
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PRO_PRICE_ID=price_...
+STRIPE_WEBHOOK_SECRET=whsec_...
 ```
 
 ### Recommended hosting:
